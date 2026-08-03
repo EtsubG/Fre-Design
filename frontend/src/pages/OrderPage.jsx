@@ -19,8 +19,8 @@ import { getProductById } from '../services/productService';
 const INITIAL_FORM = {
   fullName: '', email: '', phone: '', country: '', city: '', address: '', notes: '',
   bust: '', waist: '', hips: '', shoulderWidth: '', dressLength: '', sleeveLength: '',
-  armCircumference: '', neckCircumference: '',
-  fabric: '', color: '', designNotes: '', referenceImage: null,
+  armCircumference: '', neckCircumference: '', height: '',
+  fabric: '', designNotes: '', referenceImage: null,
 };
 
 function OrderPage() {

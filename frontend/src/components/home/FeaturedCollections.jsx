@@ -13,15 +13,15 @@ function FeaturedCollections() {
       <div className="container-luxury">
         <SectionTitle
           eyebrow="Curated Selection"
-          title="Featured Collections"
+          title="Featured Albums"
           subtitle="A glimpse of our most cherished pieces — each one tailored to celebrate the woman who wears it."
         />
         <div className="mt-14">
           <ProductGrid products={products} loading={loading} columns={4} />
         </div>
         <div className="mt-14 flex justify-center">
-          <Button to="/collections" variant="outline" size="lg" rightIcon={<span>→</span>}>
-            View All Collections
+          <Button to="/albums" variant="outline" size="lg" rightIcon={<span>→</span>}>
+            View All Albums
           </Button>
         </div>
       </div>

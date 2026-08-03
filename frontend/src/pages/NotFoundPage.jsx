@@ -39,9 +39,9 @@ function NotFoundPage() {
           <Home className="h-4 w-4" />
           Back to Home
         </Link>
-        <Link to="/collections" className="btn-base border border-brown-300 px-7 py-3.5 text-sm text-brown-700 hover:border-gold-500">
+        <Link to="/albums" className="btn-base border border-brown-300 px-7 py-3.5 text-sm text-brown-700 hover:border-gold-500">
           <ArrowLeft className="h-4 w-4" />
-          Browse Collections
+          Browse Albums
         </Link>
       </motion.div>
     </section>

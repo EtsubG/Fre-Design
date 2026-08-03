@@ -121,7 +121,7 @@ function AboutPage() {
               ))}
             </ul>
             <div className="mt-9">
-              <Button to="/collections" rightIcon={<ArrowRight className="h-4 w-4" />}>
+              <Button to="/albums" rightIcon={<ArrowRight className="h-4 w-4" />}>
                 Discover Our Pieces
               </Button>
             </div>

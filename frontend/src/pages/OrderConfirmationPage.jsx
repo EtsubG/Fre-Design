@@ -100,7 +100,7 @@ function OrderConfirmationPage() {
             <Button to="/" variant="outline" leftIcon={<HomeIcon className="h-4 w-4" />}>
               Back to Home
             </Button>
-            <Button to="/collections" rightIcon={<ArrowRight className="h-4 w-4" />}>
+            <Button to="/albums" rightIcon={<ArrowRight className="h-4 w-4" />}>
               Continue Shopping
             </Button>
           </div>

@@ -1,44 +1,51 @@
-import apiClient from './apiClient';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
-
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+import supabase from './supabaseClient';
 
 export async function login(credentials) {
-  if (USE_MOCK) {
-    await delay(800);
-    if (
-      credentials.email === 'admin@fre-design.com' &&
-      credentials.password === 'admin123'
-    ) {
-      const token = `mock-jwt-${Date.now()}`;
-      localStorage.setItem('fre_design_token', token);
-      localStorage.setItem(
-        'fre_design_user',
-        JSON.stringify({ name: 'Administrator', email: credentials.email }),
-      );
-      return { data: { token, user: { name: 'Administrator', email: credentials.email } } };
-    }
-    throw { message: 'Invalid email or password.', status: 401 };
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  if (error) {
+    throw { message: error.message, status: 401 };
   }
-  const { data } = await apiClient.post('/auth/login', credentials);
-  if (data.token) {
-    localStorage.setItem('fre_design_token', data.token);
-    localStorage.setItem('fre_design_user', JSON.stringify(data.user));
-  }
-  return data;
+
+  const user = {
+    name: data.user?.user_metadata?.full_name || 'Administrator',
+    email: data.user?.email,
+  };
+
+  return { data: { token: data.session?.access_token, user } };
 }
 
-export function logout() {
-  localStorage.removeItem('fre_design_token');
-  localStorage.removeItem('fre_design_user');
+export async function logout() {
+  await supabase.auth.signOut();
+  localStorage.removeItem('fere_design_user');
 }
 
 export function getStoredUser() {
-  const raw = localStorage.getItem('fre_design_user');
+  const raw = localStorage.getItem('fere_design_user');
   return raw ? JSON.parse(raw) : null;
 }
 
 export function isAuthenticated() {
-  return Boolean(localStorage.getItem('fre_design_token'));
+  return Boolean(localStorage.getItem('fere_design_token'));
+}
+
+// Keep stored user in sync with Supabase session
+export function initAuthListener() {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      localStorage.setItem('fere_design_token', session.access_token);
+      const user = {
+        name: session.user?.user_metadata?.full_name || 'Administrator',
+        email: session.user?.email,
+      };
+      localStorage.setItem('fere_design_user', JSON.stringify(user));
+    }
+    if (event === 'SIGNED_OUT') {
+      localStorage.removeItem('fere_design_token');
+      localStorage.removeItem('fere_design_user');
+    }
+  });
 }

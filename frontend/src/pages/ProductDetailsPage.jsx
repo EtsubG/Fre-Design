@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Heart, Truck, ShieldCheck, RefreshCw, Star } from 'lucide-react';
+import { ShoppingBag, Truck, ShieldCheck, RefreshCw, Clock, Scissors } from 'lucide-react';
 import ImageGallery from '../components/ImageGallery';
-import ColorSelector from '../components/ui/ColorSelector';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Breadcrumb from '../components/ui/Breadcrumb';
@@ -11,10 +9,10 @@ import Spinner from '../components/ui/Spinner';
 import SectionTitle from '../components/ui/SectionTitle';
 import ProductCard from '../components/ProductCard';
 import { useFetch } from '../hooks/useFetch';
-import { getProductById, getProducts } from '../services/productService';
+import { getProductById, getRelatedProducts } from '../services/productService';
+import { normalizeImages } from '../constants/albumImages';
+import heroImg from '../assets/images/hero.jpg';
 import { formatCurrency } from '../utils';
-import { COLOR_SWATCHES, APP_CONFIG } from '../constants';
-import { useToast } from '../context/ToastContext';
 
 const PERKS = [
   { Icon: Truck, label: 'Free insured shipping' },
@@ -25,10 +23,12 @@ const PERKS = [
 function ProductDetailsPage() {
   const { id } = useParams();
   const { data: product, loading, error } = useFetch(() => getProductById(id), [id]);
-  const { data: allProducts } = useFetch(() => getProducts(), []);
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [qty, setQty] = useState(1);
-  const toast = useToast();
+
+  const albumId = product?.album?.id || product?.album_id;
+  const { data: related } = useFetch(
+    () => (albumId ? getRelatedProducts(id, albumId, 3) : Promise.resolve({ data: [] })),
+    [albumId, id],
+  );
 
   if (loading) {
     return (
@@ -43,23 +43,14 @@ function ProductDetailsPage() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 pt-20 text-center">
         <p className="font-serif text-3xl text-brown-900">Piece not found</p>
         <p className="text-brown-500">The piece you are looking for may no longer be available.</p>
-        <Button to="/collections" variant="outline">Back to Collections</Button>
+        <Button to="/albums" variant="outline">Back to Albums</Button>
       </div>
     );
   }
 
-  const related = (allProducts || [])
-    .filter((p) => p.id !== product.id && p.category === product.category)
-    .slice(0, 3);
-
-  const colorLabels = product.colors
-    .map((c) => COLOR_SWATCHES.find((s) => s.id === c)?.label)
-    .filter(Boolean)
-    .join(' · ');
-
-  const handleOrder = () => {
-    toast.success(`${product.name} added to your order. Continue to measurements.`);
-  };
+  const images = normalizeImages(
+    product.images && product.images.length > 0 ? product.images : [heroImg],
+  );
 
   return (
     <article className="pt-28">
@@ -67,7 +58,8 @@ function ProductDetailsPage() {
         <Breadcrumb
           items={[
             { label: 'Home', path: '/' },
-            { label: 'Collections', path: '/collections' },
+            { label: 'Albums', path: '/albums' },
+            ...(product.album ? [{ label: product.album.name, path: `/albums/${product.album.slug}` }] : []),
             { label: product.name },
           ]}
         />
@@ -75,7 +67,7 @@ function ProductDetailsPage() {
 
       <section className="py-12">
         <div className="container-luxury grid gap-12 lg:grid-cols-2">
-          <ImageGallery images={product.images} alt={product.name} />
+          <ImageGallery images={images} alt={product.name} />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -94,74 +86,45 @@ function ProductDetailsPage() {
               {product.name}
             </h1>
 
-            <div className="mt-3 flex items-center gap-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${i < product.rating ? 'fill-gold-400 text-gold-400' : 'text-brown-200'}`}
-                />
-              ))}
-              <span className="text-sm text-brown-500">({product.rating}.0)</span>
-            </div>
-
             <p className="mt-6 font-serif text-3xl text-brown-900">
               {formatCurrency(product.price)}
             </p>
 
             <p className="mt-5 leading-relaxed text-brown-600">{product.description}</p>
 
-            <div className="mt-8 space-y-6">
-              <ColorSelector
-                selected={selectedColor}
-                onChange={setSelectedColor}
-                availableColors={product.colors}
-              />
-
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-brown-800">Quantity</span>
-                <div className="flex items-center rounded-full border border-brown-200">
-                  <button
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="flex h-9 w-9 items-center justify-center rounded-l-full text-brown-600 hover:bg-brown-100"
-                    aria-label="Decrease quantity"
-                  >
-                    −
-                  </button>
-                  <span className="w-10 text-center text-sm font-medium" aria-live="polite">
-                    {qty}
-                  </span>
-                  <button
-                    onClick={() => setQty((q) => q + 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-r-full text-brown-600 hover:bg-brown-100"
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
+            <div className="mt-8 space-y-4 rounded-2xl border border-brown-100 bg-cream-50 p-5">
+              <div className="flex items-center gap-3">
+                <Scissors className="h-5 w-5 text-gold-600" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-brown-400">Fabric</p>
+                  <p className="text-sm font-medium text-brown-800">{product.fabric}</p>
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  to="/order"
-                  state={{ productId: product.id, productName: product.name, price: product.price, color: selectedColor, qty }}
-                  className="btn-base flex-1 bg-gold-gradient px-8 py-4 text-sm text-white shadow-gold"
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  Order Custom Fit
-                </Link>
-                <button
-                  onClick={handleOrder}
-                  className="btn-base border border-brown-300 px-5 py-4 text-brown-700 hover:border-gold-500 hover:text-gold-700"
-                  aria-label="Save to wishlist"
-                >
-                  <Heart className="h-5 w-5" />
-                </button>
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-gold-600" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-brown-400">Estimated Tailoring Time</p>
+                  <p className="text-sm font-medium text-brown-800">{product.tailoringTime || '3-4 weeks'}</p>
+                </div>
               </div>
+              <div className="flex items-center gap-3">
+                <Truck className="h-5 w-5 text-gold-600" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-brown-400">Estimated Delivery Time</p>
+                  <p className="text-sm font-medium text-brown-800">{product.deliveryTime || '1-2 weeks'}</p>
+                </div>
+              </div>
+            </div>
 
-              <p className="text-xs text-brown-500">
-                Color options: {colorLabels}. Each dress is tailored in approximately{' '}
-                {APP_CONFIG.estimatedDeliveryWeeks} weeks.
-              </p>
+            <div className="mt-8">
+              <Link
+                to="/order"
+                state={{ productId: product.id, productName: product.name, price: product.price }}
+                className="btn-base flex w-full items-center justify-center gap-2 bg-gold-gradient px-8 py-4 text-sm text-white shadow-gold"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Order Now
+              </Link>
             </div>
 
             <ul className="mt-8 grid grid-cols-1 gap-3 border-t border-brown-100 pt-6 sm:grid-cols-3">
@@ -176,7 +139,7 @@ function ProductDetailsPage() {
         </div>
       </section>
 
-      {related.length > 0 && (
+      {(related || []).length > 0 && (
         <section className="bg-cream-100 py-20">
           <div className="container-luxury">
             <SectionTitle
@@ -185,7 +148,7 @@ function ProductDetailsPage() {
               align="left"
             />
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map((p, i) => (
+              {(related || []).map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />
               ))}
             </div>

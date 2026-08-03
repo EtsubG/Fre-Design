@@ -1,82 +1,68 @@
 import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, ShoppingBag, Lock } from 'lucide-react';
-import Logo from './Logo';
-import LanguageSwitch from '../ui/LanguageSwitch';
-import { NAV_LINKS } from '../../constants';
-import { useScrollPosition } from '../../hooks/useScrollPosition';
+import { Menu, X } from 'lucide-react';
+
+const LEFT_LINKS = [
+  { label: 'Albums', path: '/albums' },
+  { label: 'Our Story', path: '/about' },
+];
+
+const RIGHT_LINKS = [
+  { label: 'Contact', path: '/contact' },
+  { label: 'Admin', path: '/admin' },
+];
 
 function Navbar() {
-  const scrolled = useScrollPosition(30);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const location = useLocation();
 
-  const isHome = location.pathname === '/';
-  const solid = scrolled || !isHome || mobileOpen;
+  const linkClass = ({ isActive }) =>
+    `text-xs font-medium uppercase tracking-widest transition-colors ${
+      isActive ? 'text-amber-700' : 'text-stone-800 hover:text-amber-700'
+    }`;
 
   return (
     <motion.header
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-        solid ? 'bg-cream-50/95 shadow-soft backdrop-blur-md' : 'bg-transparent'
-      }`}
+      className="fixed inset-x-0 top-0 z-50 bg-[#f5f0e8] shadow-[0_1px_0_rgba(0,0,0,0.08)]"
     >
-      <nav className="container-luxury flex h-20 items-center justify-between gap-6">
-        <Logo light={!solid} />
-
-        <ul className="hidden items-center gap-8 lg:flex">
-          {NAV_LINKS.map((link) => (
+      <nav className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-8 lg:px-16">
+        {/* Left links — desktop */}
+        <ul className="hidden items-center gap-10 lg:flex">
+          {LEFT_LINKS.map((link) => (
             <li key={link.path}>
-              <NavLink
-                to={link.path}
-                className={({ isActive }) =>
-                  `link-underline text-sm font-medium tracking-wide transition-colors ${
-                    isActive
-                      ? 'text-gold-700'
-                      : solid
-                        ? 'text-brown-800 hover:text-gold-700'
-                        : 'text-cream-100 hover:text-gold-300'
-                  }`
-                }
-              >
+              <NavLink to={link.path} className={linkClass}>
                 {link.label}
               </NavLink>
             </li>
           ))}
-          <li className="ml-2 border-l border-current/20 pl-6">
-            <Link
-              to="/admin"
-              className={`flex items-center gap-1.5 text-sm font-medium tracking-wide transition-colors ${
-                solid ? 'text-brown-500 hover:text-gold-700' : 'text-cream-200/70 hover:text-gold-300'
-              }`}
-            >
-              <Lock className="h-3.5 w-3.5" />
-              Admin
-            </Link>
-          </li>
         </ul>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <LanguageSwitch />
-          <Link
-            to="/order"
-            className={`btn-base gap-2 px-5 py-2.5 text-sm ${
-              solid ? 'bg-gold-gradient text-white shadow-gold' : 'bg-white/90 text-brown-900'
-            }`}
-          >
-            <ShoppingBag className="h-4 w-4" />
-            Custom Order
-          </Link>
-        </div>
+        {/* Brand name — always centered */}
+        <Link
+          to="/"
+          className="absolute left-1/2 -translate-x-1/2 font-serif text-xl font-bold uppercase tracking-[0.18em] text-stone-900 hover:text-amber-800 transition-colors"
+        >
+          FERE-DESIGN
+        </Link>
 
+        {/* Right links — desktop */}
+        <ul className="hidden items-center gap-10 lg:flex">
+          {RIGHT_LINKS.map((link) => (
+            <li key={link.path}>
+              <NavLink to={link.path} className={linkClass}>
+                {link.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+
+        {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          className={`flex h-10 w-10 items-center justify-center rounded-lg lg:hidden ${
-            solid ? 'text-brown-900' : 'text-cream-50'
-          }`}
+          className="flex h-10 w-10 items-center justify-center text-stone-800 lg:hidden"
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
         >
@@ -84,6 +70,7 @@ function Navbar() {
         </button>
       </nav>
 
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -91,17 +78,17 @@ function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden bg-cream-50 lg:hidden"
+            className="overflow-hidden bg-[#f5f0e8] lg:hidden"
           >
-            <ul className="container-luxury flex flex-col gap-1 py-4">
-              {NAV_LINKS.map((link) => (
+            <ul className="flex flex-col gap-1 px-8 pb-6 pt-2">
+              {[...LEFT_LINKS, ...RIGHT_LINKS].map((link) => (
                 <li key={link.path}>
                   <NavLink
                     to={link.path}
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
-                      `block rounded-xl px-4 py-3 text-base font-medium transition-colors ${
-                        isActive ? 'bg-gold-50 text-gold-700' : 'text-brown-800 hover:bg-brown-50'
+                      `block rounded-lg px-4 py-3 text-sm font-medium uppercase tracking-widest transition-colors ${
+                        isActive ? 'text-amber-700' : 'text-stone-800 hover:text-amber-700'
                       }`
                     }
                   >
@@ -109,27 +96,6 @@ function Navbar() {
                   </NavLink>
                 </li>
               ))}
-              <li className="mt-1 border-t border-brown-100 pt-2">
-                <Link
-                  to="/admin"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-xl px-4 py-3 text-base font-medium text-brown-500 transition-colors hover:bg-brown-50 hover:text-gold-700"
-                >
-                  <Lock className="h-4 w-4" />
-                  Admin
-                </Link>
-              </li>
-              <li className="mt-2 flex items-center justify-between px-4">
-                <LanguageSwitch />
-                <Link
-                  to="/order"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-base bg-gold-gradient px-5 py-2.5 text-sm text-white"
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  Custom Order
-                </Link>
-              </li>
             </ul>
           </motion.div>
         )}

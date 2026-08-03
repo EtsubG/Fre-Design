@@ -1,13 +1,11 @@
 import { motion } from 'framer-motion';
 import Textarea from '../ui/Textarea';
-import ColorSelector from '../ui/ColorSelector';
 import ReceiptUpload from '../ReceiptUpload';
 import { FABRIC_OPTIONS } from '../../constants';
 
 export function validateCustomization(form) {
   const errors = {};
   if (!form.fabric) errors.fabric = 'Please select a fabric.';
-  if (!form.color) errors.color = 'Please choose a color.';
   return errors;
 }
 
@@ -44,14 +42,8 @@ function CustomizationStep({ form, errors, update, onUpload }) {
         {errors.fabric && <p className="mt-2 text-xs text-red-600">{errors.fabric}</p>}
       </div>
 
-      <ColorSelector
-        selected={form.color}
-        onChange={(color) => update('color')({ target: { value: color } })}
-      />
-      {errors.color && <p className="text-xs text-red-600">{errors.color}</p>}
-
       <Textarea
-        label="Design Notes (optional)"
+        label="Design Notes (የዲዛይን ማስታወሻ)"
         name="designNotes"
         rows={4}
         value={form.designNotes}

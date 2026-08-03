@@ -34,7 +34,7 @@ function MeasurementsStep({ form, errors, update }) {
         {MEASUREMENT_FIELDS.map((field) => (
           <Input
             key={field.key}
-            label={`${field.label} (${field.unit})`}
+            label={`${field.label} (${field.amharic})`}
             name={field.key}
             type="number"
             min="1"

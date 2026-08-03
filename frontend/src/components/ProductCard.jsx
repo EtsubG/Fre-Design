@@ -25,7 +25,7 @@ function ProductCard({ product, index = 0 }) {
 
           {product.badge && (
             <div className="absolute left-4 top-4">
-              <Badge variant={product.badge === 'New' ? 'gold' : 'dark'}>
+              <Badge variant="dark">
                 {product.badge}
               </Badge>
             </div>

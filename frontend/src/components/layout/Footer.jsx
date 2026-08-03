@@ -16,7 +16,7 @@ function Footer() {
       error('Please enter a valid email address.');
       return;
     }
-    success('Thank you for subscribing. Welcome to the FRE-DESIGN circle.');
+    success('Thank you for subscribing. Welcome to the FERE-DESIGN circle.');
     setEmail('');
   };
 

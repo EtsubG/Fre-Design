@@ -15,7 +15,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('fre_design_token');
+    const token = localStorage.getItem('fere_design_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

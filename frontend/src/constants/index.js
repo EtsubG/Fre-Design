@@ -1,9 +1,9 @@
 export const APP_CONFIG = {
-  name: 'FRE-DESIGN',
+  name: 'FERE-DESIGN',
   tagline: 'Luxury Habesha Kemis',
   description:
     'Bespoke Ethiopian traditional dresses crafted with modern luxury and timeless elegance.',
-  email: 'hello@fre-design.com',
+  email: 'hello@fere-design.com',
   phone: '+251 11 555 0123',
   whatsapp: '+251 91 234 5678',
   address: 'Bole Road, Friendship Building, Addis Ababa, Ethiopia',
@@ -21,26 +21,26 @@ export const APP_CONFIG = {
 
 export const NAV_LINKS = [
   { label: 'Home', path: '/' },
-  { label: 'Collections', path: '/collections' },
+  { label: 'Albums', path: '/albums' },
   { label: 'About', path: '/about' },
   { label: 'Contact', path: '/contact' },
 ];
 
 export const MEASUREMENT_FIELDS = [
-  { key: 'bust', label: 'Bust', unit: 'cm', placeholder: '90' },
-  { key: 'waist', label: 'Waist', unit: 'cm', placeholder: '72' },
-  { key: 'hips', label: 'Hips', unit: 'cm', placeholder: '96' },
-  { key: 'shoulderWidth', label: 'Shoulder Width', unit: 'cm', placeholder: '38' },
-  { key: 'dressLength', label: 'Dress Length', unit: 'cm', placeholder: '150' },
-  { key: 'sleeveLength', label: 'Sleeve Length', unit: 'cm', placeholder: '58' },
-  { key: 'armCircumference', label: 'Arm Circumference', unit: 'cm', placeholder: '28' },
-  { key: 'neckCircumference', label: 'Neck Circumference', unit: 'cm', placeholder: '36' },
+  { key: 'height', label: 'Height', amharic: 'ቁመት', unit: 'cm', placeholder: '165' },
+  { key: 'waist', label: 'Waist', amharic: 'ወገብ', unit: 'cm', placeholder: '72' },
+  { key: 'dressLength', label: 'Dress Length', amharic: 'የቀሚስ ርዝመት', unit: 'cm', placeholder: '150' },
+  { key: 'bust', label: 'Bust', amharic: 'ደረት', unit: 'cm', placeholder: '90' },
+  { key: 'hips', label: 'Hips', amharic: 'ዳርቻ', unit: 'cm', placeholder: '96' },
+  { key: 'shoulderWidth', label: 'Shoulder Width', amharic: 'ትከሻ ስፋት', unit: 'cm', placeholder: '38' },
+  { key: 'sleeveLength', label: 'Sleeve Length', amharic: 'ክንል ርዝመት', unit: 'cm', placeholder: '58' },
+  { key: 'armCircumference', label: 'Arm Circumference', amharic: 'ክንል ዙሪያ', unit: 'cm', placeholder: '28' },
 ];
 
 export const ORDER_STEPS = [
   { id: 1, label: 'Details', description: 'Your contact information' },
   { id: 2, label: 'Measurements', description: 'Body measurements for tailoring' },
-  { id: 3, label: 'Customization', description: 'Colors, fabric, and notes' },
+  { id: 3, label: 'Customization', description: 'Fabric and notes' },
   { id: 4, label: 'Review', description: 'Confirm and submit your order' },
 ];
 
@@ -58,7 +58,7 @@ export const TESTIMONIALS = [
     location: 'Addis Ababa',
     rating: 5,
     quote:
-      'The craftsmanship is unmatched. My wedding Habesha Kemis fit perfectly and felt truly mine. FRE-DESIGN made the day unforgettable.',
+      'The craftsmanship is unmatched. My wedding Habesha Kemis fit perfectly and felt truly mine. FERE-DESIGN made the day unforgettable.',
     image:
       'https://images.pexels.com/photos/3998013/pexels-photo-3998013.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
   },
@@ -108,22 +108,4 @@ export const FABRIC_OPTIONS = [
   { id: 'chiffon', label: 'Chiffon', description: 'Light, flowing, elegant drape' },
   { id: 'silk', label: 'Silk Blend', description: 'Lustrous, premium, luxurious' },
   { id: 'tilet', label: 'Tilet Fabric', description: 'Handwoven with woven borders' },
-];
-
-export const COLOR_SWATCHES = [
-  { id: 'ivory', label: 'Ivory', value: '#f5f0e6' },
-  { id: 'gold', label: 'Gold', value: '#d6a73c' },
-  { id: 'emerald', label: 'Emerald', value: '#1f6b5d' },
-  { id: 'crimson', label: 'Crimson', value: '#9b2d2d' },
-  { id: 'sapphire', label: 'Sapphire', value: '#2c4a7c' },
-  { id: 'brown', label: 'Espresso', value: '#4a2e24' },
-  { id: 'black', label: 'Onyx', value: '#1a1a1a' },
-];
-
-export const CATEGORIES = [
-  { id: 'all', label: 'All Collections' },
-  { id: 'wedding', label: 'Bridal' },
-  { id: 'festive', label: 'Festive' },
-  { id: 'ceremonial', label: 'Ceremonial' },
-  { id: 'contemporary', label: 'Contemporary' },
 ];

@@ -1,5 +1,5 @@
 import heroImg from '../../assets/images/hero.jpg';
-import sadexImg from '../../assets/images/Sadexqayd_Somali_culture.jpg';
+import casualImg from '../../assets/images/casual.jpg';
 
 export const PRODUCTS = [
   {
@@ -14,7 +14,7 @@ export const PRODUCTS = [
     fabric: 'Silk Blend',
     description:
       'A luminous bridal Habesha Kemis in ivory silk blend, finished with hand-embroidered gold Tilet borders. Designed for the bride who carries heritage with grace.',
-    images: [heroImg, sadexImg, heroImg],
+    images: [heroImg, casualImg, heroImg],
   },
   {
     id: 'p2',
@@ -28,7 +28,7 @@ export const PRODUCTS = [
     fabric: 'Handwoven Cotton',
     description:
       'A vibrant crimson Habesha Kemis with woven gold borders, made for celebration. Lightweight cotton drapes beautifully through every festivity.',
-    images: [sadexImg, heroImg, sadexImg],
+    images: [casualImg, heroImg, casualImg],
   },
   {
     id: 'p3',
@@ -42,7 +42,7 @@ export const PRODUCTS = [
     fabric: 'Tilet Fabric',
     description:
       'An emerald ceremonial Kemis in authentic handwoven Tilet fabric. Rich color, intricate borders, and a silhouette of quiet authority.',
-    images: [heroImg, sadexImg, heroImg],
+    images: [heroImg, casualImg, heroImg],
   },
   {
     id: 'p4',
@@ -56,7 +56,7 @@ export const PRODUCTS = [
     fabric: 'Chiffon',
     description:
       'A modern interpretation of the Habesha Kemis in flowing sapphire chiffon. Minimalist borders meet a contemporary, versatile silhouette.',
-    images: [sadexImg, heroImg, sadexImg],
+    images: [casualImg, heroImg, casualImg],
   },
   {
     id: 'p5',
@@ -70,7 +70,7 @@ export const PRODUCTS = [
     fabric: 'Silk Blend',
     description:
       'The Nigist royal gown in espresso and gold — a statement of regal elegance. Hand-embroidered borders and a sculpted silhouette for the most distinguished occasions.',
-    images: [heroImg, sadexImg, heroImg],
+    images: [heroImg, casualImg, heroImg],
   },
   {
     id: 'p6',
@@ -84,7 +84,7 @@ export const PRODUCTS = [
     fabric: 'Chiffon',
     description:
       'A minimalist onyx chiffon Kemis with delicate ivory borders. Understated luxury for the woman who lets craftsmanship speak for itself.',
-    images: [sadexImg, heroImg, sadexImg],
+    images: [casualImg, heroImg, casualImg],
   },
 ];
 

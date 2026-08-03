@@ -65,7 +65,7 @@ function AdminLoginPage() {
             <Lock className="h-6 w-6" />
           </div>
           <h1 className="mt-5 font-serif text-3xl text-brown-900">Admin Access</h1>
-          <p className="mt-2 text-sm text-brown-500">Sign in to manage orders and messages.</p>
+          <p className="mt-2 text-sm text-brown-500">Sign in to manage albums, products, and orders.</p>
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5" noValidate>
@@ -77,7 +77,7 @@ function AdminLoginPage() {
             value={form.email}
             onChange={update('email')}
             error={errors.email}
-            placeholder="admin@fre-design.com"
+            placeholder="admin@fere-design.com"
           />
           <Input
             label="Password"
@@ -95,7 +95,7 @@ function AdminLoginPage() {
         </form>
 
         <div className="mt-6 rounded-xl bg-gold-50 p-3 text-center text-xs text-brown-600">
-          Demo credentials: <span className="font-medium">admin@fre-design.com</span> / <span className="font-medium">admin123</span>
+          Demo credentials: <span className="font-medium">admin@fere-design.com</span> / <span className="font-medium">admin123</span>
         </div>
 
         <Link to="/" className="mt-6 block text-center text-sm text-brown-500 hover:text-gold-700">

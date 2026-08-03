@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { MEASUREMENT_FIELDS, FABRIC_OPTIONS, COLOR_SWATCHES } from '../../constants';
+import { MEASUREMENT_FIELDS, FABRIC_OPTIONS } from '../../constants';
 import { formatCurrency } from '../../utils';
 
 function ReviewStep({ form, product, price, onEdit }) {
   const fabric = FABRIC_OPTIONS.find((f) => f.id === form.fabric);
-  const color = COLOR_SWATCHES.find((c) => c.id === form.color);
 
   const sections = [
     {
@@ -95,15 +94,6 @@ function ReviewStep({ form, product, price, onEdit }) {
           <div>
             <dt className="text-xs uppercase tracking-wider text-brown-400">Fabric</dt>
             <dd className="mt-0.5 text-sm text-brown-800">{fabric?.label || '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-brown-400">Color</dt>
-            <dd className="mt-0.5 flex items-center gap-2 text-sm text-brown-800">
-              {color && (
-                <span className="h-4 w-4 rounded-full ring-1 ring-brown-200" style={{ backgroundColor: color.value }} />
-              )}
-              {color?.label || '—'}
-            </dd>
           </div>
           {form.designNotes && (
             <div className="sm:col-span-2">
