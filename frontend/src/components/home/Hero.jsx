@@ -31,7 +31,7 @@ function Hero() {
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="font-serif text-5xl leading-[1.1] text-white sm:text-6xl lg:text-7xl"
+          className="font-serif text-5xl leading-[1.1] text-black sm:text-6xl lg:text-7xl"
           style={{ textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}
         >
           <span className="italic">Habesha</span>

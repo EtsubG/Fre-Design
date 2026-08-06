@@ -1,20 +1,17 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-
-const CTA_IMAGE =
-  'https://images.pexels.com/photos/30985153/pexels-photo-30985153.jpeg?auto=compress&cs=tinysrgb&w=1600';
+import CTA_IMAGE from '../../assets/images/tilet.png';
 
 function CtaBanner() {
   return (
     <section className="relative overflow-hidden py-24 lg:py-32">
       <div className="absolute inset-0">
-        <img
-          src={CTA_IMAGE}
-          alt="Elegant woman adorned with gold jewelry"
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
+       <img
+  src={CTA_IMAGE}
+  alt="CTA"
+  className="w-full h-screen object-cover"
+/>
         <div className="absolute inset-0 bg-brown-950/75" />
       </div>
 

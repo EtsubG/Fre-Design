@@ -10,7 +10,7 @@ function Testimonials() {
         <SectionTitle
           eyebrow="Kind Words"
           title="Stories From Our Clients"
-          subtitle="Women across the world wear FRE-DESIGN for their most cherished moments."
+          subtitle="Women across the world wear FERE-DESIGN for their most cherished moments."
         />
         <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {TESTIMONIALS.map((t, i) => (
