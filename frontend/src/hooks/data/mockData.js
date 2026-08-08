@@ -23,7 +23,7 @@ export const PRODUCTS = [
     price: 285,
     rating: 5,
     featured: true,
-    badge: 'Bestseller',
+    badge: 'holidays',
     colors: ['crimson', 'gold'],
     fabric: 'Handwoven Cotton',
     description:

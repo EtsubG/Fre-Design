@@ -13,8 +13,8 @@ function FeaturedCollections() {
       <div className="container-luxury">
         <SectionTitle
           eyebrow="Curated Selection"
-          title="Featured Albums"
-          subtitle="A glimpse of our most cherished pieces — each one tailored to celebrate the woman who wears it."
+         
+        
         />
         <div className="mt-14">
           <ProductGrid products={products} loading={loading} columns={4} />
