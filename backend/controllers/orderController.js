@@ -1,5 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const sendTelegramNotification = require('../utils/telegram');
+
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Public
@@ -28,8 +30,8 @@ const createOrder = async (req, res) => {
     // Save to MongoDB
     const createdOrder = await order.save();
 
-    // TODO: In the future, this is where we will add the code to 
-    // trigger the Telegram/WhatsApp notification to the designer.
+    // Trigger Telegram notification to the designer (non-blocking)
+    sendTelegramNotification(createdOrder);
 
     res.status(201).json({
       message: 'Order placed successfully',
@@ -42,6 +44,7 @@ const createOrder = async (req, res) => {
     res.status(500).json({ message: 'Server error while creating order', error: error.message });
   }
 };
+
 // @desc    Get all orders for Admin Dashboard
 // @route   GET /api/orders
 const getOrders = async (req, res) => {
@@ -96,5 +99,3 @@ module.exports = {
   getOrders, 
   updateOrderStatus 
 };
-
-
