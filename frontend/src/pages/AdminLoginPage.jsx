@@ -5,7 +5,6 @@ import { Lock, ArrowRight } from 'lucide-react';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { login } from '../services/authService';
-import { isValidEmail } from '../utils';
 import { useToast } from '../context/ToastContext';
 
 function AdminLoginPage() {
@@ -26,7 +25,7 @@ function AdminLoginPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     const next = {};
-    if (!isValidEmail(form.email)) next.email = 'Please enter a valid email.';
+    if (!form.email.trim()) next.email = 'Please enter your username.';
     if (form.password.length < 6) next.password = 'Password must be at least 6 characters.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
@@ -70,32 +69,43 @@ function AdminLoginPage() {
 
         <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5" noValidate>
           <Input
-            label="Email"
-            name="email"
-            type="email"
+            label="Username"
+            name="username"
+            type="text"
             required
+            autoComplete="username"
             value={form.email}
             onChange={update('email')}
             error={errors.email}
-            placeholder="admin@fere-design.com"
+            placeholder="admin"
           />
           <Input
             label="Password"
             name="password"
             type="password"
             required
+            autoComplete="current-password"
             value={form.password}
             onChange={update('password')}
             error={errors.password}
             placeholder="••••••••"
           />
-          <Button type="submit" loading={submitting} fullWidth size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
+          <Button
+            type="submit"
+            loading={submitting}
+            fullWidth
+            size="lg"
+            rightIcon={<ArrowRight className="h-4 w-4" />}
+          >
             {submitting ? 'Signing in…' : 'Sign In'}
           </Button>
         </form>
 
         <div className="mt-6 rounded-xl bg-gold-50 p-3 text-center text-xs text-brown-600">
-          Demo credentials: <span className="font-medium">admin@fere-design.com</span> / <span className="font-medium">admin123</span>
+          Use the username and password you registered with.
+          <br />
+          First time? Register via{' '}
+          <code className="rounded bg-gold-100 px-1 font-mono">POST /api/auth/register</code>
         </div>
 
         <Link to="/" className="mt-6 block text-center text-sm text-brown-500 hover:text-gold-700">

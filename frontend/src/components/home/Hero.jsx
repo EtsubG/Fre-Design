@@ -11,7 +11,7 @@ function Hero() {
           src={heroImg}
           alt="Woman wearing an elegant Habesha Kemis"
           className="h-full w-full object-cover object-center"
-          fetchPriority="high"
+          fetchpriority="high"
         />
       </div>
 

@@ -17,8 +17,14 @@ export async function sendMessage(payload) {
       },
     };
   }
+  // Backend returns { message, id, date } — wrap in { data }
   const { data } = await apiClient.post('/messages', payload);
-  return data;
+  return {
+    data: {
+      id:   data.id,
+      date: data.date,
+    },
+  };
 }
 
 export async function getMessages() {
@@ -26,6 +32,7 @@ export async function getMessages() {
     await delay(400);
     return { data: MOCK_MESSAGES };
   }
+  // Backend returns { count, messages: [...] } — normalise to { data: [...] }
   const { data } = await apiClient.get('/messages');
-  return data;
+  return { data: data.messages || [] };
 }

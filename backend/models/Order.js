@@ -14,27 +14,29 @@ const orderSchema = new mongoose.Schema({
 
   // Custom Measurements
   measurements: {
-    height: { type: Number, required: true },
-    waist: { type: Number, required: true },
-    hips: { type: Number, required: true },
-    shoulderWidth: { type: Number, required: true },
-    sleeveLength: { type: Number, required: true },
-    dressLength: { type: Number, required: true },
-    waistToFloor: { type: Number, required: true },
-    shoulderToWaist: { type: Number, required: true }
+    height:          { type: Number, required: true },
+    waist:           { type: Number, required: true },
+    hips:            { type: Number, required: true },
+    shoulderWidth:   { type: Number, required: true },
+    sleeveLength:    { type: Number, required: true },
+    dressLength:     { type: Number, required: true },
+    waistToFloor:    { type: Number, default: 0 },   // collected optionally
+    shoulderToWaist: { type: Number, default: 0 }    // collected optionally
   },
 
   // Product Details
   orderedItem: {
-    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    product:       { type: String },  // Supabase UUID or mock ID — stored as plain string
+    productName:   { type: String },  // human-readable name for easy reference
     selectedColor: { type: String, required: true }
   },
 
   // Payment Details
   payment: {
-    receiptUrl: { type: String, required: true }, // URL to uploaded PDF/Image
-    status: { 
-      type: String, 
+    receiptUrl: { type: String, default: 'pending' },
+    amount:     { type: Number, default: 0 },           // order price in USD
+    status: {
+      type: String,
       enum: ['Pending Verification', 'Verified', 'Rejected'],
       default: 'Pending Verification'
     }

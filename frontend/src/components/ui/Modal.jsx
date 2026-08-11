@@ -20,7 +20,7 @@ function Modal({ open = true, onClose, title, children, maxWidth, size }) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto p-4 sm:items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -28,19 +28,22 @@ function Modal({ open = true, onClose, title, children, maxWidth, size }) {
           aria-modal="true"
           aria-label={title}
         >
+          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-brown-950/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-brown-950/60 backdrop-blur-sm"
             onClick={onClose}
           />
+
+          {/* Panel — scrolls independently, never taller than the viewport */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className={`relative z-10 w-full ${widthClass} rounded-2xl bg-white shadow-luxury`}
+            className={`relative z-10 my-4 w-full ${widthClass} max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-white shadow-luxury`}
           >
             {title && (
-              <div className="flex items-center justify-between border-b border-brown-100 px-6 py-4">
+              <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-brown-100 bg-white px-6 py-4">
                 <h3 className="font-serif text-xl text-brown-900">{title}</h3>
                 <button
                   onClick={onClose}

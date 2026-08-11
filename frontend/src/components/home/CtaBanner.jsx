@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import CTA_IMAGE from '../../assets/images/tilet.png';
+import CTA_IMAGE from '../../assets/images/hero.jpg';
 
 function CtaBanner() {
   return (

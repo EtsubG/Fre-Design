@@ -1,5 +1,4 @@
 const Order = require('../models/Order');
-const Product = require('../models/Product');
 const sendTelegramNotification = require('../utils/telegram');
 
 // @desc    Create new order
@@ -45,14 +44,27 @@ const createOrder = async (req, res) => {
   }
 };
 
+// @desc    Get single order by orderId string (e.g. HAB-123456)
+// @route   GET /api/orders/:id
+const getOrderById = async (req, res) => {
+  try {
+    // Try orderId field first, fall back to MongoDB _id
+    let order = await Order.findOne({ orderId: req.params.id });
+    if (!order) order = await Order.findById(req.params.id).catch(() => null);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    res.status(200).json({ order });
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // @desc    Get all orders for Admin Dashboard
 // @route   GET /api/orders
 const getOrders = async (req, res) => {
   try {
     // Fetch all orders, pull full product info via populate, and show newest first
-    const orders = await Order.find()
-      .populate('orderedItem.product', 'name price fabricDetails')
-      .sort({ createdAt: -1 });
+    const orders = await Order.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       count: orders.length,
@@ -95,7 +107,8 @@ const updateOrderStatus = async (req, res) => {
 };
 
 module.exports = { 
-  createOrder, 
+  createOrder,
+  getOrderById,
   getOrders, 
   updateOrderStatus 
 };

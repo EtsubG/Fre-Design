@@ -1,41 +1,80 @@
 const axios = require('axios');
 
-const sendTelegramNotification = async (order) => {
+/**
+ * Sends a Telegram notification for either a new order or a contact message.
+ * Detects the type by checking payload.type === 'message'.
+ */
+const sendTelegramNotification = async (payload) => {
   try {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const token  = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!token || !chatId) {
-      console.warn('Telegram credentials missing in .env file.');
+      console.warn('⚠️  Telegram credentials missing in .env file.');
       return;
     }
 
-    const customer = order.customerInfo || {};
-    const payment = order.payment || {};
+    let text;
 
-    const message = `
-🚨 *NEW HABESHA KEMIS ORDER!* 🚨
-----------------------------------
-*Order ID:* \`${order.orderId || order._id}\`
-*Customer Name:* ${customer.fullName || customer.name || 'Guest'}
-*Phone:* ${customer.phone || 'N/A'}
-*City / Address:* ${customer.city || customer.address || 'N/A'}
+    // ── Contact message notification ─────────────────────────────────────
+    if (payload.type === 'message') {
+      const c = payload.customerInfo || {};
+      text = `
+📩 *NEW CONTACT MESSAGE*
 
-*Payment Method:* ${payment.method || 'N/A'}
-*Total Price:* Br ${payment.amount || payment.totalAmount || 0}
-----------------------------------
-⏰ *Status:* ${order.orderStatus || 'Pending'}
-    `;
+*From:* ${c.fullName || 'Unknown'}
+*Email:* ${c.email || 'N/A'}
+*Subject:* ${payload.subject || 'N/A'}
+
+${payload.body || ''}
+`.trim();
+
+    // ── Order notification ────────────────────────────────────────────────
+    } else {
+      const order = payload;
+      const c = order.customerInfo || {};
+      const m = order.measurements  || {};
+      const i = order.orderedItem   || {};
+      const p = order.payment       || {};
+
+      text = `
+🚨 *NEW HABESHA KEMIS ORDER!*
+
+*Order ID:* \`${order.orderId || order._id || 'N/A'}\`
+*Status:* ${order.orderStatus || 'Pending'}
+
+👤 *CUSTOMER*
+• Name: ${c.fullName || 'N/A'}
+• Phone: ${c.phoneNumber || 'N/A'}
+• Email: ${c.email || 'N/A'}
+• City: ${c.city || 'N/A'}
+• Address: ${c.deliveryAddress || 'N/A'}
+${c.additionalNotes ? `• Notes: ${c.additionalNotes}` : ''}
+
+👗 *ORDER*
+• Product: ${i.productName || i.product || 'N/A'}
+• Fabric/Color: ${i.selectedColor || 'N/A'}
+
+📏 *MEASUREMENTS (cm)*
+• Height: ${m.height || '—'} | Waist: ${m.waist || '—'} | Hips: ${m.hips || '—'}
+• Shoulder: ${m.shoulderWidth || '—'} | Sleeve: ${m.sleeveLength || '—'} | Dress: ${m.dressLength || '—'}
+
+💳 *PAYMENT*
+• Amount: $${p.amount || 0}
+• Receipt: ${p.receiptUrl && p.receiptUrl !== 'pending' ? p.receiptUrl : 'Not uploaded yet'}
+• Status: ${p.status || 'Pending Verification'}
+`.trim();
+    }
 
     await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
       chat_id: chatId,
-      text: message,
-      parse_mode: 'Markdown'
+      text,
+      parse_mode: 'Markdown',
     });
 
-    console.log('Telegram order notification sent successfully!');
+    console.log('✅ Telegram notification sent.');
   } catch (error) {
-    console.error('Failed to send Telegram notification:', error.response?.data || error.message);
+    console.error('❌ Telegram notification failed:', error.response?.data || error.message);
   }
 };
 

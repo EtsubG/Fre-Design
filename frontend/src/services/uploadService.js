@@ -5,8 +5,9 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Uploads a measurement reference image. Returns a mock URL until the
- * backend storage endpoint (e.g. S3 / Multer) is implemented.
+ * Uploads a reference image / receipt for an order.
+ * Backend: POST /api/upload  (field name: "receipt")
+ * Returns { receiptUrl } on success.
  */
 export async function uploadReceipt(file, onProgress) {
   if (USE_MOCK) {
@@ -19,9 +20,12 @@ export async function uploadReceipt(file, onProgress) {
       },
     };
   }
+
   const formData = new FormData();
   formData.append('receipt', file);
-  const { data } = await apiClient.post('/uploads/receipt', formData, {
+
+  // apiClient base is /api — so this hits POST /api/upload
+  const { data } = await apiClient.post('/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (event) => {
       if (onProgress && event.total) {
@@ -29,5 +33,7 @@ export async function uploadReceipt(file, onProgress) {
       }
     },
   });
-  return data;
+
+  // Backend returns { receiptUrl } — normalise to { data: { url } }
+  return { data: { url: data.receiptUrl, filename: file.name } };
 }
