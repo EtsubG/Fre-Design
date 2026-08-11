@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-cream-50 text-brown-900 font-sans antialiased;
+    font-feature-settings: 'kern', 'liga';
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+  }
+
+  ::selection {
+    @apply bg-gold-300/60 text-brown-950;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-cream-50;
+  }
+}
+
+@layer components {
+  .container-luxury {
+    @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply text-xs font-medium uppercase tracking-widest text-gold-600;
+  }
+
+  .heading-display {
+    @apply font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl;
+  }
+
+  .heading-section {
+    @apply font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .link-underline {
+    @apply relative inline-block after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-current after:transition-all after:duration-500 hover:after:w-full;
+  }
+
+  .card-luxury {
+    @apply rounded-2xl bg-white shadow-soft ring-1 ring-brown-100/60 transition-all duration-500 ease-luxury hover:shadow-card;
+  }
+
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-500 ease-luxury focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .input-luxury {
+    @apply w-full rounded-xl border border-brown-200 bg-white px-4 py-3 text-brown-900 placeholder-brown-300 transition-all duration-300 focus:border-gold-500 focus:ring-2 focus:ring-gold-200;
+  }
+
+  .shimmer-bg {
+    @apply bg-gradient-to-r from-cream-100 via-cream-200 to-cream-100 bg-[length:200%_100%] animate-shimmer;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .text-shadow-luxury {
+    text-shadow: 0 2px 24px rgba(43, 26, 19, 0.45);
+  }
+}
