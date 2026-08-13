@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
 
   // Product Details
   orderedItem: {
-    product:       { type: String },  // Supabase UUID or mock ID — stored as plain string
+    product:       { type: String },  // MongoDB product ID stored as plain string
     productName:   { type: String },  // human-readable name for easy reference
     selectedColor: { type: String, required: true }
   },

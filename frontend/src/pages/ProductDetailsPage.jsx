@@ -48,9 +48,11 @@ function ProductDetailsPage() {
     );
   }
 
-  const images = normalizeImages(
-    product.images && product.images.length > 0 ? product.images : [heroImg],
-  );
+  const images = (() => {
+    const imgs = product.images && product.images.length > 0 ? product.images : [heroImg];
+    // Ensure plain strings (guard against any shape inconsistency)
+    return normalizeImages(imgs.map((img) => (typeof img === 'string' ? img : img?.url)).filter(Boolean));
+  })();
 
   return (
     <article className="pt-28">

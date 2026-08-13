@@ -1,16 +1,12 @@
-import supabase from './supabaseClient';
 import apiClient from './apiClient';
 
 /**
- * Admin login — tries the Express/MongoDB backend first (JWT auth).
- * Falls back to Supabase auth if the backend is unavailable.
- * Falls back to demo credentials when neither is configured.
+ * Admin login via Express/MongoDB backend (JWT auth).
  */
 export async function login(credentials) {
-  // --- 1. Try the Express backend (username = email field value) ---
   try {
     const { data } = await apiClient.post('/auth/login', {
-      username: credentials.email,   // Admin UI sends email field; backend uses username
+      username: credentials.email, // login form uses "email" field for the username
       password: credentials.password,
     });
 
@@ -18,49 +14,21 @@ export async function login(credentials) {
     localStorage.setItem('fere_design_token', data.token);
     localStorage.setItem('fere_design_user', JSON.stringify(user));
     return { data: { token: data.token, user } };
-  } catch (backendErr) {
-    // Backend unavailable or wrong credentials — fall through to Supabase
-    if (backendErr.status === 401) {
-      // Definite wrong credentials — don't try Supabase, surface the error
+  } catch (err) {
+    // err.status 401 = wrong credentials, 0 = network/server down
+    if (err.status === 401) {
       throw { message: 'Invalid username or password.', status: 401 };
     }
+    if (!err.status || err.status === 0) {
+      throw { message: 'Cannot reach the server. Make sure the backend is running.', status: 0 };
+    }
+    throw { message: err.message || 'Login failed. Please try again.', status: err.status };
   }
-
-  // --- 2. Supabase fallback (when backend is offline) ---
-  if (supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
-    if (error) throw { message: error.message, status: 401 };
-
-    const user = {
-      name: data.user?.user_metadata?.full_name || 'Administrator',
-      email: data.user?.email,
-    };
-    localStorage.setItem('fere_design_token', data.session?.access_token);
-    localStorage.setItem('fere_design_user', JSON.stringify(user));
-    return { data: { token: data.session?.access_token, user } };
-  }
-
-  // --- 3. Demo credentials (no backend, no Supabase) ---
-  if (
-    credentials.email === 'admin@fere-design.com' &&
-    credentials.password === 'admin123'
-  ) {
-    const user = { name: 'Administrator', email: credentials.email };
-    localStorage.setItem('fere_design_token', 'demo-token');
-    localStorage.setItem('fere_design_user', JSON.stringify(user));
-    return { data: { token: 'demo-token', user } };
-  }
-
-  throw { message: 'Invalid credentials.', status: 401 };
 }
 
 export async function logout() {
-  if (supabase) await supabase.auth.signOut();
-  localStorage.removeItem('fere_design_user');
   localStorage.removeItem('fere_design_token');
+  localStorage.removeItem('fere_design_user');
 }
 
 export function getStoredUser() {
@@ -72,21 +40,5 @@ export function isAuthenticated() {
   return Boolean(localStorage.getItem('fere_design_token'));
 }
 
-// Keep stored user in sync with Supabase session (only when Supabase is configured)
-export function initAuthListener() {
-  if (!supabase) return;
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      localStorage.setItem('fere_design_token', session.access_token);
-      const user = {
-        name: session.user?.user_metadata?.full_name || 'Administrator',
-        email: session.user?.email,
-      };
-      localStorage.setItem('fere_design_user', JSON.stringify(user));
-    }
-    if (event === 'SIGNED_OUT') {
-      localStorage.removeItem('fere_design_token');
-      localStorage.removeItem('fere_design_user');
-    }
-  });
-}
+// No-op — kept so callers in App.jsx don't break
+export function initAuthListener() {}

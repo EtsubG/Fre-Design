@@ -16,7 +16,7 @@ function ProductCard({ product, index = 0 }) {
       <Link to={`/products/${product.id}`} className="block">
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-cream-100 shadow-soft">
           <img
-            src={product.images[0]}
+            src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url}
             alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-700 ease-luxury group-hover:scale-105"

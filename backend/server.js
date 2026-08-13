@@ -12,6 +12,8 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
   process.env.FRONTEND_URL, // set this in production
 ].filter(Boolean);
 
@@ -28,6 +30,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+
 // Health check
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Habesha Kemis API is running.' });
@@ -36,6 +39,8 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/orders',   require('./routes/orderRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/albums',   require('./routes/albumRoutes'));
+app.use('/api/images',   require('./routes/imageRoutes'));
 app.use('/api/upload',   require('./routes/uploadRoutes'));
 app.use('/api/auth',     require('./routes/authRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));

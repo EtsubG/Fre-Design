@@ -270,17 +270,19 @@ function AlbumManager({ toast }) {
   const handleSaveProduct = async (data) => {
     setSaving(true);
     try {
-      let productId = data.id;
-      if (data.id) { await updateProduct(data.id, data); toast.success('Product updated.'); }
-      else { const { data: c } = await createProduct(data); productId = c.id; toast.success('Product created.'); }
-      const newImgs = (data.images || []).filter((i) => i.url?.startsWith('blob:'));
-      for (let i = 0; i < newImgs.length; i++) {
-        try {
-          const blob = await fetch(newImgs[i].url).then((r) => r.blob());
-          const file = new File([blob], `img-${Date.now()}.jpg`, { type: blob.type });
-          const { data: up } = await uploadProductImage(file, productId);
-          await addProductImage(productId, up.url, i);
-        } catch (e) { toast.error(`Image upload failed: ${e.message}`); }
+      // Images are already uploaded as real URLs — extract the URL strings
+      const imageUrls = (data.images || []).map((img) =>
+        typeof img === 'string' ? img : img.url
+      ).filter((url) => url && url.startsWith('http'));
+
+      if (data.id) {
+        // Update product including the final image URLs
+        await updateProduct(data.id, { ...data, images: imageUrls });
+        toast.success('Product updated.');
+      } else {
+        // Create product, then set images
+        const { data: created } = await createProduct({ ...data, images: imageUrls });
+        toast.success('Product created.');
       }
       setProductModal(null);
       refetchProducts();
@@ -294,16 +296,32 @@ function AlbumManager({ toast }) {
     catch (err) { toast.error(err.message || 'Could not delete product.'); }
   };
 
-  const handleRemoveImage = async (product, imageId) => {
-    try { await deleteProductImageRecord(imageId); toast.success('Image removed.'); refetchProducts(); }
-    catch (err) { toast.error(err.message || 'Could not remove image.'); }
+  const handleRemoveImage = async (product, dbIndex) => {
+    // dbIndex is the index within the filtered http-only images array
+    // We need to find the actual index in the raw DB images array
+    const dbImages = (product.images || []).filter(img => {
+      const url = typeof img === 'string' ? img : img.url;
+      return url && url.startsWith('http');
+    });
+    const urlToRemove = typeof dbImages[dbIndex] === 'string' ? dbImages[dbIndex] : dbImages[dbIndex]?.url;
+    if (!urlToRemove) { toast.error('Image not found.'); return; }
+    // Find the actual index in the full images array
+    const actualIndex = (product.images || []).findIndex(img => {
+      const url = typeof img === 'string' ? img : img.url;
+      return url === urlToRemove;
+    });
+    try {
+      await deleteProductImageRecord(product.id, actualIndex);
+      toast.success('Image removed.');
+      refetchProducts();
+    } catch (err) { toast.error(err.message || 'Could not remove image.'); }
   };
 
   const handleAddImages = async (product, files) => {
     for (const file of files) {
       try {
         const { data: up } = await uploadProductImage(file, product.id);
-        await addProductImage(product.id, up.url, (product.images || []).length);
+        await addProductImage(product.id, up.url);
         toast.success('Image added.');
       } catch (err) { toast.error(err.message || 'Upload failed.'); }
     }
@@ -365,8 +383,8 @@ function AlbumManager({ toast }) {
         ) : filtered.map((product) => (
           <div key={product.id} className="card-luxury overflow-hidden">
             <div className="relative aspect-[4/3] bg-cream-100">
-              {product.images?.[0]?.url
-                ? <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
+              {product.images?.[0]
+                ? <img src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
                 : <div className="flex h-full items-center justify-center"><ImageIcon className="h-8 w-8 text-brown-200" /></div>}
             </div>
             <div className="p-4">
@@ -374,14 +392,20 @@ function AlbumManager({ toast }) {
               <p className="text-sm text-brown-500">{product.album?.name || 'Uncategorized'}</p>
               <p className="mt-1 font-serif text-lg text-brown-900">{formatCurrency(product.price)}</p>
               <div className="mt-3 flex flex-wrap gap-1">
-                {(product.images || []).slice(0, 4).map((img) => (
-                  <div key={img.id} className="group relative h-12 w-12 overflow-hidden rounded-lg">
-                    <img src={img.url} alt="" className="h-full w-full object-cover" />
-                    <button onClick={() => handleRemoveImage(product, img.id)} className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove image">
-                      <X className="h-4 w-4 text-white" />
-                    </button>
-                  </div>
-                ))}
+                {(product.images || []).filter(img => {
+                  const url = typeof img === 'string' ? img : img.url;
+                  return url && url.startsWith('http');
+                }).map((img, idx) => {
+                  const url = typeof img === 'string' ? img : img.url;
+                  return (
+                    <div key={idx} className="group relative h-12 w-12 overflow-hidden rounded-lg">
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                      <button onClick={() => handleRemoveImage(product, idx)} className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove image">
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                    </div>
+                  );
+                })}
                 <label className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-brown-200 text-brown-400 transition-colors hover:border-gold-400 hover:text-gold-600" aria-label="Add image">
                   <Plus className="h-4 w-4" />
                   <input type="file" accept="image/*" multiple className="sr-only"
@@ -430,6 +454,7 @@ function AlbumModal({ album, saving, onClose, onSave }) {
 }
 
 function ProductModal({ product, albums, saving, onClose, onSave }) {
+  const toast = useToast();
   const [form, setForm] = useState({
     name: product.name || '', description: product.description || '',
     fabric: product.fabric || '', price: product.price || '',
@@ -437,15 +462,42 @@ function ProductModal({ product, albums, saving, onClose, onSave }) {
     featured: product.featured || false, badge: product.badge || '',
     albumId: product.albumId || product.album?.id || albums[0]?.id || '',
   });
-  const [images, setImages] = useState((product.images || []).map((img) => ({ ...img })));
+
+  // Only keep DB images (real http URLs) — local asset fallbacks are not editable
+  const [images, setImages] = useState(
+    (product.images || [])
+      .filter((img) => {
+        const url = typeof img === 'string' ? img : img.url;
+        return url && (url.startsWith('http') || url.startsWith('blob:'));
+      })
+      .map((img, idx) =>
+        typeof img === 'string' ? { id: `img-${idx}`, url: img } : img
+      )
+  );
+  const [uploading, setUploading] = useState(false);
+
   const update = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
-  const handleFiles = (files) => {
-    const previews = files.map((f) => ({ id: `new-${Date.now()}-${Math.random()}`, url: URL.createObjectURL(f) }));
-    setImages((prev) => [...prev, ...previews]);
+
+  // Upload immediately when files are selected so URLs are real before save
+  const handleFiles = async (files) => {
+    setUploading(true);
+    for (const file of files) {
+      try {
+        // Use a temporary productId placeholder — we'll re-upload on save if needed
+        // For new products, upload to a temp folder; for existing products use real id
+        const tempId = product.id || 'temp';
+        const { data: up } = await uploadProductImage(file, tempId);
+        setImages((prev) => [...prev, { id: `uploaded-${Date.now()}`, url: up.url }]);
+      } catch (err) {
+        toast.error(`Upload failed: ${err.message}`);
+      }
+    }
+    setUploading(false);
   };
+
   return (
     <Modal onClose={onClose} title={product.id ? 'Edit Product' : 'New Product'} size="lg">
       <div className="space-y-4">
@@ -470,23 +522,30 @@ function ProductModal({ product, albums, saving, onClose, onSave }) {
           </label>
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium text-brown-800">Product Images {images.length > 0 && `(${images.length})`}</label>
+          <label className="mb-2 block text-sm font-medium text-brown-800">
+            Product Images {images.length > 0 && `(${images.length})`}
+          </label>
           {images.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-2">
               {images.map((img) => (
                 <div key={img.id} className="group relative h-20 w-20 overflow-hidden rounded-lg">
                   <img src={img.url} alt="" className="h-full w-full object-cover" />
-                  <button onClick={() => setImages((prev) => prev.filter((i) => i.id !== img.id))}
-                    className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove image">
+                  <button
+                    onClick={() => setImages((prev) => prev.filter((i) => i.id !== img.id))}
+                    className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-label="Remove image"
+                  >
                     <X className="h-5 w-5 text-white" />
                   </button>
                 </div>
               ))}
             </div>
           )}
-          <label className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brown-200 bg-cream-50 px-6 py-6 text-center transition-colors hover:border-gold-400 hover:bg-gold-50/40">
+          <label className={`flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brown-200 bg-cream-50 px-6 py-6 text-center transition-colors hover:border-gold-400 hover:bg-gold-50/40 ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
             <Upload className="h-6 w-6 text-gold-500" />
-            <p className="text-sm font-medium text-brown-800">Upload images from your device</p>
+            <p className="text-sm font-medium text-brown-800">
+              {uploading ? 'Uploading…' : 'Upload images from your device'}
+            </p>
             <p className="text-xs text-brown-400">JPG, PNG — multiple allowed</p>
             <input type="file" accept="image/*" multiple className="sr-only"
               onChange={(e) => { if (e.target.files?.length) handleFiles(Array.from(e.target.files)); e.target.value = ''; }} />
@@ -494,8 +553,11 @@ function ProductModal({ product, albums, saving, onClose, onSave }) {
         </div>
         <div className="flex justify-end gap-3 border-t border-brown-100 pt-4">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => { if (form.name.trim() && form.albumId) onSave({ ...form, id: product.id, images }); }}
-            disabled={!form.name.trim() || !form.albumId || saving} loading={saving}>
+          <Button
+            onClick={() => { if (form.name.trim() && form.albumId) onSave({ ...form, id: product.id, images }); }}
+            disabled={!form.name.trim() || !form.albumId || saving || uploading}
+            loading={saving}
+          >
             {product.id ? 'Update Product' : 'Create Product'}
           </Button>
         </div>

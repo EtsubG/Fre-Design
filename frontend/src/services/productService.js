@@ -1,19 +1,14 @@
-import supabase from './supabaseClient';
+/**
+ * productService.js
+ * All data comes from the Express/MongoDB backend.
+ * Falls back to mock data ONLY when the backend is completely unreachable.
+ */
+import apiClient from './apiClient';
 import { getAlbumCover, getProductImages, normalizeImages } from '../constants/albumImages';
 import { PRODUCTS } from '../hooks/data/mockData';
 
-// productService uses Supabase when configured, and falls back to local
-// mock data automatically when VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
-// are not set. This keeps every page functional during local development.
-
-const USE_MOCK = !supabase;
-
-function shuffle(array) {
-  return [...array].sort(() => Math.random() - 0.5);
-}
-
 // ---------------------------------------------------------------------------
-// Mock album definitions (match the slugs used in ALBUM_COVERS / PRODUCTS)
+// Mock fallback — used only when backend is offline
 // ---------------------------------------------------------------------------
 const MOCK_ALBUMS = [
   { id: 'a1', name: 'Wedding',  slug: 'wedding',  sort_order: 1 },
@@ -22,311 +17,181 @@ const MOCK_ALBUMS = [
   { id: 'a4', name: 'Holidays', slug: 'holidays', sort_order: 4 },
 ];
 
-// Map each mock product to an album so all service helpers are consistent
-const ALBUM_SLUG_MAP = {
-  wedding:  'a1',
-  festive:  'a4',
-  ceremonial: 'a1',
-  contemporary: 'a3',
-};
+const ALBUM_SLUG_MAP = { wedding: 'a1', festive: 'a4', ceremonial: 'a1', contemporary: 'a3' };
 
 function normaliseMockProduct(p) {
   const albumId = ALBUM_SLUG_MAP[p.category] || 'a3';
   const album   = MOCK_ALBUMS.find((a) => a.id === albumId) || MOCK_ALBUMS[0];
-  const localImages = getProductImages(p.name);
   return {
-    id:           p.id,
-    name:         p.name,
-    description:  p.description,
-    fabric:       p.fabric,
-    price:        Number(p.price),
+    id:            p.id,
+    name:          p.name,
+    description:   p.description || '',
+    fabric:        p.fabric || '',
+    price:         Number(p.price),
     tailoringTime: '3-4 weeks',
     deliveryTime:  '1-2 weeks',
-    featured:     p.featured,
-    badge:        p.badge,
+    featured:      p.featured || false,
+    badge:         p.badge || '',
     album,
-    images: normalizeImages(localImages || p.images || []),
+    albumId:       album.id,
+    images:        normalizeImages(getProductImages(p.name) || p.images || []),
   };
 }
 
 // ---------------------------------------------------------------------------
-// Public service functions
+// Helpers — normalise a backend product into the UI shape
 // ---------------------------------------------------------------------------
-
-export async function getAlbums() {
-  if (USE_MOCK) {
-    const albums = MOCK_ALBUMS.map((a) => ({
-      ...a,
-      cover_image_url: getAlbumCover(a.slug) || null,
-    }));
-    return { data: albums };
-  }
-
-  const { data, error } = await supabase
-    .from('albums')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (error) throw { message: error.message, status: 500 };
-
-  // If Supabase has no albums yet, fall back to mock so pages aren't blank
-  if (!data || data.length === 0) {
-    return {
-      data: MOCK_ALBUMS.map((a) => ({
-        ...a,
-        cover_image_url: getAlbumCover(a.slug) || null,
-      })),
-    };
-  }
-
-  const albums = (data || []).map((a) => ({
-    ...a,
-    cover_image_url: getAlbumCover(a.slug) || a.cover_image_url,
-  }));
-
-  return { data: albums };
+function normaliseProduct(p) {
+  // DB images always win; only use local assets as fallback for display
+  const dbImages    = (p.images || []).map((img) => (typeof img === 'string' ? img : img.url)).filter(Boolean);
+  const localImages = getProductImages(p.name) || [];
+  const displayImages = normalizeImages(dbImages.length > 0 ? dbImages : localImages);
+  return {
+    id:            p._id,
+    name:          p.name,
+    description:   p.description || '',
+    fabric:        p.fabricDetails || '',
+    price:         Number(p.price),
+    tailoringTime: p.estimatedTailoringTime || '',
+    deliveryTime:  p.deliveryTime || '',
+    featured:      p.isFeatured || false,
+    badge:         p.badge || '',
+    album: p.albumId
+      ? { id: p.albumId._id || p.albumId, name: p.albumId.name, slug: p.albumId.slug }
+      : null,
+    albumId: p.albumId?._id || p.albumId || null,
+    images:  displayImages,
+  };
 }
 
-export async function getProductsByAlbum(albumSlug) {
-  if (USE_MOCK) {
-    const album = MOCK_ALBUMS.find((a) => a.slug === albumSlug);
-    if (!album) return { data: { album: { name: 'Unknown', slug: albumSlug }, products: [] } };
+function normaliseAlbum(a) {
+  return {
+    id:              a._id || a.id,
+    name:            a.name,
+    slug:            a.slug,
+    sort_order:      a.sortOrder || a.sort_order || 0,
+    cover_image_url: getAlbumCover(a.slug) || a.coverImageUrl || null,
+  };
+}
 
-    const products = PRODUCTS
-      .filter((p) => ALBUM_SLUG_MAP[p.category] === album.id)
-      .map(normaliseMockProduct);
+export function shuffle(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
 
-    return {
-      data: {
-        album: { ...album, cover_image_url: getAlbumCover(albumSlug) },
-        products,
-      },
-    };
-  }
-
-  const { data: album } = await supabase
-    .from('albums')
-    .select('id, name, slug')
-    .eq('slug', albumSlug)
-    .maybeSingle();
-
-  if (!album) return { data: { album: { name: 'Unknown', slug: albumSlug }, products: [] } };
-
-  const { data: products, error } = await supabase
-    .from('products')
-    .select(`
-      id, name, description, fabric, price, tailoring_time, delivery_time,
-      featured, badge, sort_order, album_id,
-      product_images (id, image_url, sort_order)
-    `)
-    .eq('album_id', album.id)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw { message: error.message, status: 500 };
-
-  const formatted = (products || []).map((p) => {
-    const localImages = getProductImages(p.name);
-    const dbImages    = (p.product_images || [])
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map((img) => img.image_url);
-    return {
-      ...p,
-      tailoringTime: p.tailoring_time,
-      deliveryTime:  p.delivery_time,
-      images: normalizeImages(localImages || dbImages),
-    };
-  });
+// ---------------------------------------------------------------------------
+// Albums
+// ---------------------------------------------------------------------------
+export async function getAlbums() {
+  try {
+    const { data } = await apiClient.get('/albums');
+    if (data && data.length > 0) {
+      return { data: data.map(normaliseAlbum) };
+    }
+  } catch (_) { /* backend offline */ }
 
   return {
-    data: {
-      album: { ...album, cover_image_url: getAlbumCover(album.slug) },
-      products: formatted,
-    },
+    data: MOCK_ALBUMS.map((a) => ({
+      ...a,
+      cover_image_url: getAlbumCover(a.slug) || null,
+    })),
   };
 }
 
+// ---------------------------------------------------------------------------
+// Products
+// ---------------------------------------------------------------------------
 export async function getProducts(params = {}) {
-  if (USE_MOCK) {
-    let result = PRODUCTS.map(normaliseMockProduct);
-
-    if (params.albumSlug && params.albumSlug !== 'all') {
-      const album = MOCK_ALBUMS.find((a) => a.slug === params.albumSlug);
-      if (album) result = result.filter((p) => p.album?.id === album.id);
-    }
+  try {
+    const query = new URLSearchParams();
+    if (params.albumId) query.set('albumId', params.albumId);
+    const { data: raw } = await apiClient.get(`/products?${query.toString()}`);
+    let result = (raw || []).map(normaliseProduct);
+    if (params.albumSlug && params.albumSlug !== 'all')
+      result = result.filter((p) => p.album?.slug === params.albumSlug);
     if (params.search) {
       const q = params.search.toLowerCase();
-      result = result.filter(
-        (p) => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q),
-      );
+      result = result.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
     }
     if (params.sort === 'price-asc')  result.sort((a, b) => a.price - b.price);
     if (params.sort === 'price-desc') result.sort((a, b) => b.price - a.price);
     if (params.sort === 'featured')   result.sort((a, b) => Number(b.featured) - Number(a.featured));
-
     return { data: result, total: result.length };
-  }
+  } catch (_) { /* backend unreachable */ }
 
-  let query = supabase
-    .from('products')
-    .select(`
-      id, name, description, fabric, price, tailoring_time, delivery_time,
-      featured, badge, sort_order, album_id,
-      albums (id, name, slug),
-      product_images (id, image_url, sort_order)
-    `)
-    .order('sort_order', { ascending: true });
-
+  // Mock fallback
+  let result = PRODUCTS.map(normaliseMockProduct);
   if (params.albumSlug && params.albumSlug !== 'all') {
-    const { data: album } = await supabase
-      .from('albums')
-      .select('id')
-      .eq('slug', params.albumSlug)
-      .maybeSingle();
-    if (album) query = query.eq('album_id', album.id);
+    const album = MOCK_ALBUMS.find((a) => a.slug === params.albumSlug);
+    if (album) result = result.filter((p) => p.album?.id === album.id);
   }
-
-  const { data, error } = await query;
-  if (error) throw { message: error.message, status: 500 };
-
-  let result = (data || []).map((p) => {
-    const localImages = getProductImages(p.name);
-    const dbImages    = (p.product_images || [])
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map((img) => img.image_url);
-    return {
-      id: p.id, name: p.name, description: p.description,
-      fabric: p.fabric, price: Number(p.price),
-      tailoringTime: p.tailoring_time, deliveryTime: p.delivery_time,
-      featured: p.featured, badge: p.badge, album: p.albums,
-      images: normalizeImages(localImages || dbImages),
-    };
-  });
-
   if (params.search) {
     const q = params.search.toLowerCase();
-    result = result.filter(
-      (p) => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q),
-    );
+    result = result.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
   }
   if (params.sort === 'price-asc')  result.sort((a, b) => a.price - b.price);
   if (params.sort === 'price-desc') result.sort((a, b) => b.price - a.price);
   if (params.sort === 'featured')   result.sort((a, b) => Number(b.featured) - Number(a.featured));
-
   return { data: result, total: result.length };
 }
 
-export async function getProductById(id) {
-  if (USE_MOCK) {
-    const p = PRODUCTS.find((p) => p.id === id);
-    if (!p) throw { message: 'Product not found', status: 404 };
-    return { data: normaliseMockProduct(p) };
-  }
+export async function getProductsByAlbum(albumSlug) {
+  try {
+    const { data: albums } = await apiClient.get('/albums');
+    const album = (albums || []).find((a) => a.slug === albumSlug);
+    if (album) {
+      const { data: raw } = await apiClient.get(`/products?albumId=${album._id}`);
+      // Always use DB result — even empty array means no products in this album
+      return {
+        data: {
+          album:    normaliseAlbum(album),
+          products: (raw || []).map(normaliseProduct),
+        },
+      };
+    }
+  } catch (_) { /* backend unreachable */ }
 
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      id, name, description, fabric, price, tailoring_time, delivery_time,
-      featured, badge, sort_order, album_id,
-      albums (id, name, slug),
-      product_images (id, image_url, sort_order)
-    `)
-    .eq('id', id)
-    .maybeSingle();
-
-  if (error) throw { message: error.message, status: 500 };
-  if (!data)  throw { message: 'Product not found', status: 404 };
-
-  const localImages = getProductImages(data.name);
-  const dbImages    = (data.product_images || [])
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map((img) => img.image_url);
-
+  // Mock fallback
+  const mockAlbum = MOCK_ALBUMS.find((a) => a.slug === albumSlug);
+  if (!mockAlbum) return { data: { album: { name: 'Unknown', slug: albumSlug }, products: [] } };
   return {
     data: {
-      id: data.id, name: data.name, description: data.description,
-      fabric: data.fabric, price: Number(data.price),
-      tailoringTime: data.tailoring_time, deliveryTime: data.delivery_time,
-      featured: data.featured, badge: data.badge, album: data.albums,
-      images: normalizeImages(localImages || dbImages),
+      album:    { ...mockAlbum, cover_image_url: getAlbumCover(albumSlug) },
+      products: PRODUCTS.filter((p) => ALBUM_SLUG_MAP[p.category] === mockAlbum.id).map(normaliseMockProduct),
     },
   };
 }
 
+export async function getProductById(id) {
+  try {
+    const { data } = await apiClient.get(`/products/${id}`);
+    if (data) return { data: normaliseProduct(data) };
+  } catch (_) { /* fall through */ }
+
+  const p = PRODUCTS.find((p) => p.id === id);
+  if (!p) throw { message: 'Product not found', status: 404 };
+  return { data: normaliseMockProduct(p) };
+}
+
 export async function getFeaturedProducts() {
-  if (USE_MOCK) {
-    const featured = PRODUCTS.filter((p) => p.featured).map(normaliseMockProduct);
-    return { data: featured };
-  }
-
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      id, name, description, fabric, price, tailoring_time, delivery_time,
-      featured, badge, sort_order, album_id,
-      albums (id, name, slug),
-      product_images (id, image_url, sort_order)
-    `)
-    .eq('featured', true)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw { message: error.message, status: 500 };
-
-  return {
-    data: (data || []).map((p) => {
-      const localImages = getProductImages(p.name);
-      const dbImages    = (p.product_images || [])
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((img) => img.image_url);
-      return {
-        id: p.id, name: p.name, description: p.description,
-        fabric: p.fabric, price: Number(p.price),
-        tailoringTime: p.tailoring_time, deliveryTime: p.delivery_time,
-        featured: p.featured, badge: p.badge, album: p.albums,
-        images: normalizeImages(localImages || dbImages),
-      };
-    }),
-  };
+  try {
+    const { data: raw } = await apiClient.get('/products');
+    return { data: (raw || []).map(normaliseProduct).filter((p) => p.featured) };
+  } catch (_) { /* backend unreachable */ }
+  return { data: PRODUCTS.filter((p) => p.featured).map(normaliseMockProduct) };
 }
 
 export async function getRelatedProducts(productId, albumId, limit = 3) {
-  if (USE_MOCK) {
-    const album  = MOCK_ALBUMS.find((a) => a.id === albumId);
-    const result = PRODUCTS
-      .filter((p) => p.id !== productId && album && ALBUM_SLUG_MAP[p.category] === album.id)
-      .slice(0, limit)
-      .map(normaliseMockProduct);
-    return { data: result };
-  }
+  try {
+    const { data: raw } = await apiClient.get(`/products?albumId=${albumId}`);
+    return {
+      data: (raw || []).map(normaliseProduct).filter((p) => p.id !== productId).slice(0, limit),
+    };
+  } catch (_) { /* fall through */ }
 
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      id, name, description, fabric, price, tailoring_time, delivery_time,
-      featured, badge, sort_order, album_id,
-      albums (id, name, slug),
-      product_images (id, image_url, sort_order)
-    `)
-    .neq('id', productId)
-    .eq('album_id', albumId)
-    .limit(limit);
-
-  if (error) throw { message: error.message, status: 500 };
-
-  return {
-    data: (data || []).map((p) => {
-      const localImages = getProductImages(p.name);
-      const dbImages    = (p.product_images || [])
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((img) => img.image_url);
-      return {
-        id: p.id, name: p.name, description: p.description,
-        fabric: p.fabric, price: Number(p.price),
-        tailoringTime: p.tailoring_time, deliveryTime: p.delivery_time,
-        featured: p.featured, badge: p.badge, album: p.albums,
-        images: normalizeImages(localImages || dbImages),
-      };
-    }),
-  };
+  const album  = MOCK_ALBUMS.find((a) => a.id === albumId);
+  const result = PRODUCTS
+    .filter((p) => p.id !== productId && album && ALBUM_SLUG_MAP[p.category] === album.id)
+    .slice(0, limit)
+    .map(normaliseMockProduct);
+  return { data: result };
 }
-
-export { shuffle };

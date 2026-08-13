@@ -2,7 +2,9 @@ import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Expand, X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
-function ImageGallery({ images, alt }) {
+function ImageGallery({ images: rawImages, alt }) {
+  // Normalise: accept both plain URL strings and {url} objects
+  const images = (rawImages || []).map((img) => (typeof img === 'string' ? img : img?.url)).filter(Boolean);
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [zoom, setZoom] = useState(1);

@@ -1,23 +1,32 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  fabricDetails: { type: String, required: true },
-  price: { type: Number, required: true },
-  shortDescription: { type: String, required: true },
-  estimatedTailoringTime: { type: String, required: true }, // e.g., "2-3 Weeks"
-  
-  // Array of image URLs (we'll use Cloudinary or similar for hosting)
-  images: [{ type: String }], 
-  
-  // Available colors with their specific preview image/swatch
+  name:                   { type: String, required: true },
+  description:            { type: String, default: '' },
+  shortDescription:       { type: String, default: '' },
+  fabricDetails:          { type: String, default: '' },
+  price:                  { type: Number, required: true },
+  estimatedTailoringTime: { type: String, default: '' },
+  deliveryTime:           { type: String, default: '' },
+  badge:                  { type: String, default: '' },
+  isFeatured:             { type: Boolean, default: false },
+
+  // Album this product belongs to
+  albumId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Album',
+    default: null,
+  },
+
+  // Array of image URLs (uploaded via /api/upload/image)
+  images: [{ type: String }],
+
+  // Available colors with optional swatch
   colors: [{
-    colorName: { type: String, required: true },
-    hexCode: { type: String }, 
-    colorImagePreview: { type: String } // Thumbnail preview for this color
+    colorName:         { type: String, required: true },
+    hexCode:           { type: String },
+    colorImagePreview: { type: String },
   }],
-  
-  isFeatured: { type: Boolean, default: false } // For the "New Arrivals/Hero" section
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
