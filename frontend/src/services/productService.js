@@ -70,6 +70,7 @@ function normaliseAlbum(a) {
     name:            a.name,
     slug:            a.slug,
     sort_order:      a.sortOrder || a.sort_order || 0,
+    // Use hardcoded local cover, then DB cover, then null (AlbumCover will use first product image)
     cover_image_url: getAlbumCover(a.slug) || a.coverImageUrl || null,
   };
 }

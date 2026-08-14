@@ -4,24 +4,28 @@ const orderSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true }, // Unique ID for customer tracking
   
   customerInfo: {
-    fullName: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
-    email: { type: String },
-    deliveryAddress: { type: String, required: true },
-    city: { type: String, required: true },
-    additionalNotes: { type: String }
+    fullName:        { type: String, required: true },
+    phoneNumber:     { type: String, required: true },
+    email:           { type: String, default: '' },
+    deliveryAddress: { type: String, default: '' },
+    city:            { type: String, default: '' },
+    country:         { type: String, default: '' },
+    additionalNotes: { type: String, default: '' },
   },
 
-  // Custom Measurements
+  // Custom Measurements (all in cm, all optional — only height/waist/hips required)
   measurements: {
-    height:          { type: Number, required: true },
-    waist:           { type: Number, required: true },
-    hips:            { type: Number, required: true },
-    shoulderWidth:   { type: Number, required: true },
-    sleeveLength:    { type: Number, required: true },
-    dressLength:     { type: Number, required: true },
-    waistToFloor:    { type: Number, default: 0 },   // collected optionally
-    shoulderToWaist: { type: Number, default: 0 }    // collected optionally
+    height:          { type: Number, default: 0 },
+    bust:            { type: Number, default: 0 },
+    waist:           { type: Number, default: 0 },
+    hips:            { type: Number, default: 0 },
+    shoulderWidth:   { type: Number, default: 0 },
+    sleeveLength:    { type: Number, default: 0 },
+    dressLength:     { type: Number, default: 0 },
+    waistToFloor:    { type: Number, default: 0 },
+    shoulderToWaist: { type: Number, default: 0 },
+    armCircumference:  { type: Number, default: 0 },
+    neckCircumference: { type: Number, default: 0 },
   },
 
   // Product Details

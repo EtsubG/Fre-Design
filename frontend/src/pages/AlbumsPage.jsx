@@ -139,7 +139,16 @@ function AlbumsPage() {
 function AlbumCover({ album, index, description, onClick }) {
   const { data, loading } = useFetch(() => getProductsByAlbum(album.slug), [album.slug]);
   const products = data?.products || [];
-  const coverImg = album.cover_image_url;
+
+  // Use the album's explicit cover image, otherwise fall back to
+  // the first product image in the album, otherwise show a placeholder
+  const coverImg =
+    album.cover_image_url ||
+    (products.length > 0
+      ? (typeof products[0].images?.[0] === 'string'
+          ? products[0].images[0]
+          : products[0].images?.[0]?.url) || null
+      : null);
 
   return (
     <motion.article
@@ -151,7 +160,11 @@ function AlbumCover({ album, index, description, onClick }) {
       onClick={onClick}
     >
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-cream-100 shadow-soft">
-        {coverImg ? (
+        {loading && !coverImg ? (
+          <div className="flex h-full w-full items-center justify-center">
+            <Spinner />
+          </div>
+        ) : coverImg ? (
           <img
             src={coverImg}
             alt={album.name}
@@ -159,8 +172,10 @@ function AlbumCover({ album, index, description, onClick }) {
             className="h-full w-full object-cover transition-transform duration-700 ease-luxury group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Spinner />
+          // No image at all — show a styled placeholder
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-cream-200">
+            <span className="text-4xl">👗</span>
+            <span className="text-xs text-brown-400">No image yet</span>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brown-950/75 via-brown-950/10 to-transparent" />
