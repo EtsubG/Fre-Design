@@ -1,24 +1,21 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-// Ensure uploads/products directory exists
-const uploadDir = 'uploads/products';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'fere-design/products', // organizes uploads in a Cloudinary folder
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    // Optional: auto-resize/optimize on upload
+    transformation: [{ width: 1600, height: 1600, crop: 'limit', quality: 'auto' }],
   },
 });
 
 const fileFilter = (req, file, cb) => {
   const allowed = /jpeg|jpg|png|webp/;
-  const ext  = allowed.test(path.extname(file.originalname).toLowerCase());
   const mime = allowed.test(file.mimetype);
-  if (ext && mime) return cb(null, true);
+  if (mime) return cb(null, true);
   cb(new Error('Only JPG, PNG, and WebP images are allowed'));
 };
 
