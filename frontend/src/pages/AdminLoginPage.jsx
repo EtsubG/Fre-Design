@@ -104,7 +104,7 @@ function AdminLoginPage() {
         <div className="mt-6 rounded-xl bg-gold-50 p-3 text-center text-xs text-brown-600">
           Use the username and password you registered with.
           <br />
-          First time? Register via{' '}
+           Register via{' '}
           <code className="rounded bg-gold-100 px-1 font-mono">register</code>
         </div>
 
