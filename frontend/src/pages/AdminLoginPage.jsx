@@ -105,7 +105,7 @@ function AdminLoginPage() {
           Use the username and password you registered with.
           <br />
           First time? Register via{' '}
-          <code className="rounded bg-gold-100 px-1 font-mono">POST /api/auth/register</code>
+          <code className="rounded bg-gold-100 px-1 font-mono">register</code>
         </div>
 
         <Link to="/" className="mt-6 block text-center text-sm text-brown-500 hover:text-gold-700">
